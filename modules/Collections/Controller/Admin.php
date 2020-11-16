@@ -517,23 +517,13 @@ class Admin extends \Cockpit\AuthController {
 
     protected function _filter($filter, $collection, $lang = null) {
 
-        if ($this->app->storage->type == 'mongolite') {
-            return $this->_filterLight($filter, $collection, $lang);
-        }
-
-        if ($this->app->storage->type == 'mongodb') {
-            return $this->_filterMongo($filter, $collection, $lang);
-        }
-
-        return null;
-
-    }
-
-    protected function _filterLight($filter, $collection, $lang) {
+        $isMongoLite  = ($this->app->storage->type == 'mongolite');
 
         $allowedtypes = ['text','longtext','boolean','select','html','wysiwyg','markdown','code'];
         $criterias    = [];
         $_filter      = null;
+
+        $this->app->trigger('collections.admin._filter.before', [$collection, &$filter, &$allowedtypes, &$criterias]);
 
         foreach ($collection['fields'] as $field) {
 
@@ -544,64 +534,42 @@ class Admin extends \Cockpit\AuthController {
             }
 
             if ($field['type'] != 'boolean' && in_array($field['type'], $allowedtypes)) {
+                
                 $criteria = [];
                 $criteria[$name] = ['$regex' => $filter];
+
+                if (!$isMongoLite) {
+                  $criteria[$name]['$options'] = 'i';
+                }
+                
                 $criterias[] = $criteria;
             }
 
             if ($field['type']=='collectionlink') {
+                
                 $criteria = [];
                 $criteria[$name.'.display'] = ['$regex' => $filter];
+
+                if (!$isMongoLite) {
+                  $criteria[$name.'.display']['$options'] = 'i';
+                }
+
                 $criterias[] = $criteria;
             }
 
             if ($field['type']=='location') {
+                
                 $criteria = [];
                 $criteria[$name.'.address'] = ['$regex' => $filter];
+                
+                if (!$isMongoLite) {
+                  $criteria[$name.'.address']['$options'] = 'i';
+                }
+
                 $criterias[] = $criteria;
             }
 
-        }
-
-        if (count($criterias)) {
-            $_filter = ['$or' => $criterias];
-        }
-
-        return $_filter;
-    }
-
-    protected function _filterMongo($filter, $collection, $lang) {
-
-        $allowedtypes = ['text','longtext','boolean','select','html','wysiwyg','markdown','code'];
-        $criterias    = [];
-        $_filter      = null;
-
-        foreach ($collection['fields'] as $field) {
-
-            $name = $field['name'];
-
-            if ($lang && $field['localize']) {
-                $name = "{$name}_{$lang}";
-            }
-
-            if ($field['type'] != 'boolean' && in_array($field['type'], $allowedtypes)) {
-                $criteria = [];
-                $criteria[$name] = ['$regex' => $filter, '$options' => 'i'];
-                $criterias[] = $criteria;
-            }
-
-            if ($field['type']=='collectionlink') {
-                $criteria = [];
-                $criteria[$name.'.display'] = ['$regex' => $filter, '$options' => 'i'];
-                $criterias[] = $criteria;
-            }
-
-            if ($field['type']=='location') {
-                $criteria = [];
-                $criteria[$name.'.address'] = ['$regex' => $filter, '$options' => 'i'];
-                $criterias[] = $criteria;
-            }
-
+            $this->app->trigger('collections.admin._filter.field', [$collection, $name, $field, $filter, &$criterias]);
         }
 
         if (count($criterias)) {

@@ -2,9 +2,9 @@
 
     var linkCache = {};
 
-    App.Utils.renderer.collectionlink = function (v, field) {
+    App.Utils.renderer.collectionlink = function (v, field, lang) {
 
-        if (!v) {
+        if (!v || v.length === 0) {
             return '<i class="uk-icon-eye-slash uk-text-muted"></i>';
         }
 
@@ -15,11 +15,13 @@
             v = v[0];
         }
 
-        if (!linkCache[v._id]) {
+        var displayId = lang ? `${v._id}_${lang}` : v._id;
 
-            linkCache[v._id] = new Promise(function (resolve) {
+        if (!linkCache[displayId]) {
 
-                App.request('/collections/find', { collection: field.options.link, options: { filter: { _id: v._id } } }).then(function (data) {
+            linkCache[displayId] = new Promise(function (resolve) {
+
+                App.request('/collections/find', { collection: field.options.link, options: { lang: lang, filter: { _id: v._id } } }).then(function (data) {
 
                     if (!data.entries || !data.entries.length) {
                         v.display = 'n/a';
@@ -42,9 +44,9 @@
         }
 
         setTimeout(() => {
-            linkCache[v._id].then(display => {
+            linkCache[displayId].then(display => {
 
-                let spans = document.querySelectorAll(`[data-collection-display-id='${v._id}']`);
+                let spans = document.querySelectorAll(`[data-collection-display-id='${displayId}']`);
 
                 [...spans].forEach(span => {
                     span.innerText = display;
@@ -53,7 +55,7 @@
             })
         });
 
-        return `<span data-collection-display-id="${v._id}"><i class="uk-icon-spin uk-icon-spinner uk-text-muted"></i></span>`;
+        return `<span data-collection-display-id="${displayId}"><i class="uk-icon-spin uk-icon-spinner uk-text-muted"></i></span>`;
     };
 
     function selectCollectionItem(fn, options) {
