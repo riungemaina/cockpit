@@ -35,7 +35,10 @@ $this->module('cockpit')->extend([
             $name = basename($file);
 
             // clean filename
-            $clean = uniqid().preg_replace('/[^a-zA-Z0-9-_\.]/','', str_replace(' ', '-', $name));
+            $filename = pathinfo($file, PATHINFO_FILENAME);
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            $cleanFilename = preg_replace('/[^a-zA-Z0-9-_\.]/','', str_replace(' ', '-', $filename));
+            $clean = $cleanFilename.uniqid("_uid_").'.'.$ext;
             $path  = '/'.date('Y/m/d').'/'.$clean;
 
             $asset = [
@@ -45,7 +48,7 @@ $this->module('cockpit')->extend([
                 'description' => '',
                 'tags' => [],
                 'size' => filesize($file),
-                'image' => preg_match('/\.(jpg|jpeg|png|gif|svg)$/i', $file) ? true:false,
+                'image' => preg_match('/\.(jpg|jpeg|png|gif|svg|webp)$/i', $file) ? true:false,
                 'video' => preg_match('/\.(mp4|mov|ogv|webv|wmv|flv|avi)$/i', $file) ? true:false,
                 'audio' => preg_match('/\.(mp3|weba|ogg|wav|flac)$/i', $file) ? true:false,
                 'archive' => preg_match('/\.(zip|rar|7zip|gz|tar)$/i', $file) ? true:false,
