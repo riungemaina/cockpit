@@ -1,4 +1,4 @@
-# The CockPit CMS Modified for Castynet
+# Cockpit
 
 The project swaps out the default styles, colors etc. to match Castynet Studios' branding, its partners and clients.
 If you wish to see the original & official project repo you can see that [here](https://github.com/agentejo/cockpit).
