@@ -54,8 +54,9 @@ class App extends \Lime\App {
                     'url'      => '<?php echo $app->pathToUrl(expr); ?>',
                     'view'     => '<?php echo $app->view(expr); ?>',
                     'render'   => '<?php echo $app->view(expr); ?>',
-                    'include'  => '<?php echo include($app->path(expr)); ?>',
+                    'include'  => '<?php include($app->path(expr)); ?>',
                     'lang'     => '<?php echo $app("i18n")->get(expr); ?>',
+                    'json'     => '<?php echo json_encode(expr); ?>',
                 ];
 
 
