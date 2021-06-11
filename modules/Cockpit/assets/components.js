@@ -116,8 +116,8 @@ riot.tag2('cp-assets', '<div ref="list" show="{mode==\'list\'}"> <div ref="uploa
         this.selected = [];
 
         this.folders  = [];
-        this.folder   = '';
-        this.foldersPath = [];
+        this.folder   = App.session.get('app.assets.last.folder', '');
+        this.foldersPath = App.session.get('app.assets.last.foldersPath', []);
 
         this.modal    = opts.modal;
 
@@ -127,6 +127,7 @@ riot.tag2('cp-assets', '<div ref="list" show="{mode==\'list\'}"> <div ref="uploa
         this.limit    = opts.limit || 15;
 
         this.on('mount', function() {
+            this.refs.filtertitle.value = App.session.get('app.assets.last.filtertitle', '');
 
             if (opts.typefilter) {
                 this.refs.filtertype.value = opts.typefilter;
@@ -297,7 +298,7 @@ riot.tag2('cp-assets', '<div ref="list" show="{mode==\'list\'}"> <div ref="uploa
         }.bind(this)
 
         this.updateFilter = function() {
-
+            App.session.set('app.assets.last.filtertitle', this.refs.filtertitle.value);
             this.listAssets(1);
         }.bind(this)
 
@@ -499,12 +500,15 @@ riot.tag2('cp-assets', '<div ref="list" show="{mode==\'list\'}"> <div ref="uploa
                 this.foldersPath = [];
             }
 
+            App.session.set('app.assets.last.folder', this.folder);
+            App.session.set('app.assets.last.foldersPath', this.foldersPath);
+
             $this.listAssets(1);
         }.bind(this)
 
 });
 
-riot.tag2('cp-asset', '<div class="uk-text-center uk-margin-large-top" show="{!asset}"> <cp-preloader class="uk-container-center"></cp-preloader> </div> <div class="uk-form" if="{asset}"> <ul class="uk-tab uk-flex-center uk-margin" show="{App.Utils.count(panels)}"> <li class="{!panel && \'uk-active\'}"><a onclick="{selectPanel}">Main</a></li> <li class="uk-text-capitalize {p.name == panel && \'uk-active\'}" each="{p in panels}"><a onclick="{parent.selectPanel}">{p.name}</a></li> </ul> <div class="uk-grid" show="{!panel}"> <div class="uk-width-2-3"> <div class="uk-panel uk-panel-box uk-panel-card uk-panel-space"> <div class="uk-form-row"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Title\')}</label> <input class="uk-width-1-1" type="text" bind="asset.title" required> </div> <div class="uk-form-row"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Description\')}</label> <textarea class="uk-width-1-1" bind="asset.description" bind-event="input"></textarea> </div> <div class="uk-margin-large-top uk-text-center" if="{asset}"> <span class="uk-h1" if="{asset.mime.match(/^image\\//) == null}"><i class="uk-icon-{getIconCls(asset.path)}"></i></span> <div class="uk-display-inline-block uk-position-relative asset-fp-image" if="{asset.mime.match(/^image\\//)}"> <cp-thumbnail riot-src="{ASSETS_URL+asset.path}" width="800"></cp-thumbnail> <div class="cp-assets-fp" title="Focal Point" data-uk-tooltip></div> </div> <div class="uk-margin-top uk-text-truncate uk-text-small uk-text-muted"> <a href="{ASSETS_URL+asset.path}" target="_blank" title="{App.i18n.get(\'Direct link to asset\')}" data-uk-tooltip><i class="uk-icon-button uk-icon-button-outline uk-text-primary uk-icon-link"></i></a> </div> </div> </div> </div> <div class="uk-width-1-3"> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Id\')}</label> <div class="uk-margin-small-top uk-text-muted">{asset._id}</div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Folder\')}</label> <div class="uk-margin-small-top"><cp-assets-folderselect asset="{asset}"></cp-assets-folderselect></div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Type\')}</label> <div class="uk-margin-small-top uk-text-muted"><span class="uk-badge uk-badge-outline">{asset.mime}</span></div> </div> <div class="uk-margin" if="{asset.colors && Array.isArray(asset.colors) && asset.colors.length}"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Colors\')}</label> <div class="uk-margin-small-top uk-text-muted"> <span class="uk-icon-circle uk-text-large uk-margin-small-right" each="{color in asset.colors}" riot-style="color: #{String(color).replace(\'#\', \'\')}"></span> </div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Size\')}</label> <div class="uk-margin-small-top uk-text-muted">{App.Utils.formatSize(asset.size)}</div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Modified\')}</label> <div class="uk-margin-small-top uk-text-primary"><span class="uk-badge uk-badge-outline">{App.Utils.dateformat( new Date( 1000 * asset.modified ))}</span></div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Tags\')}</label> <div class="uk-margin-small-top"> <field-tags bind="asset.tags"></field-tags> </div> </div> <div class="uk-margin" if="{asset._by}"> <label class="uk-text-small">{App.i18n.get(\'Last update by\')}</label> <div class="uk-margin-small-top"> <cp-account account="{asset._by}"></cp-account> </div> </div> </div> </div> <div data-is="{\'assetspanel-\'+p.name}" asset="{asset}" each="{p in panels}" show="{panel == p.name}"></div> </div>', 'cp-asset .cp-assets-fp,[data-is="cp-asset"] .cp-assets-fp{ position: absolute; width: 10px; height: 10px; border-radius: 50%; background: red; box-shadow: 0 0 10px rgba(0,0,0,.1); border: 2px #fff solid; top: 50%; left: 50%; transform: translateX(-50%) translateY(-50%); visibility: hidden; }', '', function(opts) {
+riot.tag2('cp-asset', '<div class="uk-text-center uk-margin-large-top" show="{!asset}"> <cp-preloader class="uk-container-center"></cp-preloader> </div> <div class="uk-form" if="{asset}"> <ul class="uk-tab uk-flex-center uk-margin" show="{App.Utils.count(panels)}"> <li class="{!panel && \'uk-active\'}"><a onclick="{selectPanel}">Main</a></li> <li class="uk-text-capitalize {p.name == panel && \'uk-active\'}" each="{p in panels}"><a onclick="{parent.selectPanel}">{p.name}</a></li> </ul> <div class="uk-grid" show="{!panel}"> <div class="uk-width-2-3"> <div class="uk-panel uk-panel-box uk-panel-card uk-panel-space"> <div class="uk-form-row"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Title\')}</label> <input class="uk-width-1-1" type="text" bind="asset.title" required> </div> <div class="uk-form-row"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Description\')}</label> <textarea class="uk-width-1-1" bind="asset.description" bind-event="input"></textarea> </div> <div class="uk-margin-large-top uk-text-center" if="{asset}"> <span class="uk-h1" if="{asset.mime.match(/^image\\//) == null}"><i class="uk-icon-{parent.getIconCls(asset.path)}"></i></span> <div class="uk-display-inline-block uk-position-relative asset-fp-image" if="{asset.mime.match(/^image\\//)}"> <cp-thumbnail riot-src="{ASSETS_URL+asset.path}" width="800"></cp-thumbnail> <div class="cp-assets-fp" title="Focal Point" data-uk-tooltip></div> </div> <div class="uk-margin-top uk-text-truncate uk-text-small uk-text-muted"> <a href="{ASSETS_URL+asset.path}" target="_blank" title="{App.i18n.get(\'Direct link to asset\')}" data-uk-tooltip><i class="uk-icon-button uk-icon-button-outline uk-text-primary uk-icon-link"></i></a> </div> </div> </div> </div> <div class="uk-width-1-3"> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Id\')}</label> <div class="uk-margin-small-top uk-text-muted">{asset._id}</div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Folder\')}</label> <div class="uk-margin-small-top"><cp-assets-folderselect asset="{asset}"></cp-assets-folderselect></div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Type\')}</label> <div class="uk-margin-small-top uk-text-muted"><span class="uk-badge uk-badge-outline">{asset.mime}</span></div> </div> <div class="uk-margin" if="{asset.colors && Array.isArray(asset.colors) && asset.colors.length}"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Colors\')}</label> <div class="uk-margin-small-top uk-text-muted"> <span class="uk-icon-circle uk-text-large uk-margin-small-right" each="{color in asset.colors}" riot-style="color: #{String(color).replace(\'#\', \'\')}"></span> </div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Size\')}</label> <div class="uk-margin-small-top uk-text-muted">{App.Utils.formatSize(asset.size)}</div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Modified\')}</label> <div class="uk-margin-small-top uk-text-primary"><span class="uk-badge uk-badge-outline">{App.Utils.dateformat( new Date( 1000 * asset.modified ))}</span></div> </div> <div class="uk-margin"> <label class="uk-text-small uk-text-bold">{App.i18n.get(\'Tags\')}</label> <div class="uk-margin-small-top"> <field-tags bind="asset.tags"></field-tags> </div> </div> <div class="uk-margin" if="{asset._by}"> <label class="uk-text-small">{App.i18n.get(\'Last update by\')}</label> <div class="uk-margin-small-top"> <cp-account account="{asset._by}"></cp-account> </div> </div> <hr> <div class="uk-margin"> <div class="uk-form-file"> <a class="uk-button">{App.i18n.get(\'Replace asset\')}</a> <input class="js-upload-select" aria-label="{App.i18n.get(\'Select file\')}" type="file"> </div> <div ref="uploadprogress" class="uk-margin uk-hidden"> <div class="uk-progress"> <div ref="progressbar" class="uk-progress-bar" style="width: 0%;">&nbsp;</div> </div> </div> </div> </div> </div> <div data-is="{\'assetspanel-\'+p.name}" asset="{asset}" each="{p in panels}" show="{panel == p.name}"></div> </div>', 'cp-asset .cp-assets-fp,[data-is="cp-asset"] .cp-assets-fp{ position: absolute; width: 10px; height: 10px; border-radius: 50%; background: red; box-shadow: 0 0 10px rgba(0,0,0,.1); border: 2px #fff solid; top: 50%; left: 50%; transform: translateX(-50%) translateY(-50%); visibility: hidden; }', '', function(opts) {
 
     this.mixin(RiotBindMixin);
 
@@ -549,6 +553,49 @@ riot.tag2('cp-asset', '<div class="uk-text-center uk-margin-large-top" show="{!a
               }, 500)
           }
 
+        App.assets.require([
+            '/assets/lib/uikit/js/components/upload.js'
+        ], function() {
+
+            var uploadSettings = {
+
+                action: App.route('/assetsmanager/updateAssetFile'),
+                type: 'json',
+                single: true,
+                param: 'file',
+                before: function(options) {
+                    options.params.asset = JSON.stringify($this.asset);
+                },
+                loadstart: function() {
+                    $this.refs.uploadprogress.classList.remove('uk-hidden');
+                },
+                progress: function(percent) {
+
+                    percent = Math.ceil(percent) + '%';
+
+                    $this.refs.progressbar.innerHTML   = '<span>'+percent+'</span>';
+                    $this.refs.progressbar.style.width = percent;
+                },
+                allcomplete: function(asset) {
+
+                    $this.refs.uploadprogress.classList.add('uk-hidden');
+
+                    if (!asset) {
+                        App.ui.notify("File failed to upload.", "danger");
+                    }
+
+                    if (asset) {
+
+                        Object.assign($this.asset, asset);
+                        App.ui.notify("File uploaded.", "success");
+                        $this.update();
+                    }
+                }
+            },
+
+            uploadselect = UIkit.uploadSelect(App.$('.js-upload-select', $this.root)[0], uploadSettings)
+        });
+
       }, function(res) {
           App.ui.notify(res && (res.message || res.error) ? (res.message || res.error) : 'Loading failed.', 'danger');
       });
@@ -574,6 +621,7 @@ riot.tag2('cp-asset', '<div class="uk-text-center uk-margin-large-top" show="{!a
             App.$.extend($this.asset, asset);
             App.ui.notify("Asset updated", "success");
             $this.update();
+            $this.parent.update();
 
             if (clb) clb(asset);
 
@@ -3162,11 +3210,35 @@ riot.tag2('field-layout', '<div class="uk-sortable layout-components {!items.len
         }.bind(this)
 
         this.getPreview = function(component) {
+            var params = {
+                component: component,
+                definition: this.components[component.component],
+                output: false
+            };
+
+            App.trigger('field.layout.component.preview', params);
+
+            if (params.output) return params.output;
 
             var def = this.components[component.component];
 
             if (!def || def.children || component.component == 'grid') {
                 return;
+            }
+
+            if (def.options && def.options.preview) {
+
+                if (typeof(def.options.preview) == 'string') {
+
+                    try {
+                        def.options.preview = new Function('$v', '$c', '$def', `return \`${def.options.preview}\`;`);
+                    } catch(e) {
+                        console.warn(e);
+                        def.options.preview = null;
+                    }
+                }
+
+                return (def.options.preview && def.options.preview(component.settings || {}, component, def)) || '';
             }
 
             if (['heading', 'button'].indexOf(component.component) > -1) {
