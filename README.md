@@ -5,7 +5,7 @@ If you wish to see the original & official project repo you can see that [here](
 
 ## Copyright and license
 
-© 2020 [Castynet Studios](https://www.castynet.africa)
+© 2021 [Castynet Studios](https://www.castynet.africa)
 
 Licensed by [Agentejo](https://agentejo.com) under the MIT license.
 
