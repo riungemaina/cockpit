@@ -290,7 +290,7 @@ class UtilArrayQuery {
 
                     $d = '$document';
 
-                    if (\strpos($key, '(') !== false) {
+                    if (\strpos($key, '(') !== false || \strpos($key, '"') !== false || \strpos($key, "'") !== false) {
                         throw new \InvalidArgumentException('Unallowed characters used in filter keys');
                     }
 
